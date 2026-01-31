@@ -1,0 +1,29 @@
+{
+  "use_env_variable": "NODE_ENV",
+  "development": {
+    "username": "root",
+    "password": null,
+    "database": "talemy_dev",
+    "host": "127.0.0.1",
+    "dialect": "mysql",
+    "logging": false,
+    "define": {
+      "charset": "utf8mb4",
+      "collate": "utf8mb4_general_ci"
+    }
+  },
+  "test": {
+    "username": "root",
+    "password": null,
+    "database": "talemy_test",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": null,
+    "database": "talemy_prod",
+    "host": "127.0.0.1",
+    "dialect": "mysql"
+  }
+}
