@@ -1,6 +1,6 @@
 import db from "../../models/index.js";
 import { assertOrThrow } from "../../utils/index.js";
-const { ContactRequests, User } = db;
+const { ContactRequests, User, Conversations } = db;
 
 /**
  * @private
@@ -115,6 +115,13 @@ export async function updateContactRequestStatus(requestId, userId, newStatus) {
   );
   contactRequest.status = newStatus;
   await contactRequest.save();
+  if (newStatus === "ACCEPTED") {
+    await Conversations.create({
+      studentUserId: contactRequest.studentUserId,
+      teacherUserId: contactRequest.teacherUserId,
+      contactRequestId: contactRequest.id,
+    });
+  }
   return {
     id: contactRequest.id,
     studentUserId: contactRequest.studentUserId,
