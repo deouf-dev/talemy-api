@@ -8,7 +8,7 @@ const { Conversations, User, ContactRequests, Messages } = db;
  * @param {number} userId - The ID of the user.
  * @returns {Promise<Array>} - A promise that resolves to an array of conversations.
  */
-export default async function getConversations(userId, limit = 50, offset = 0) {
+export async function getConversations(userId, limit = 50, offset = 0) {
   const conversations = await Conversations.findAll({
     where: {
       [db.Sequelize.Op.or]: [

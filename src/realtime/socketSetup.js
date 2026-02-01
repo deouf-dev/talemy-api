@@ -1,6 +1,6 @@
-import { socketAuth } from "./socketAuth";
+import { socketAuth } from "./socketAuth.js";
 import db from "../models/index.js";
-import { sendMessage } from "../services/conversations/conversations.service";
+import { sendMessage } from "../services/conversations/conversations.service.js";
 
 export function socketSetup(io) {
   io.use(socketAuth);
