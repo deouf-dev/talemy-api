@@ -1,5 +1,5 @@
 import db from "../../models/index.js";
-import { assertOrThrow } from "../../utils/errors.js";
+import { assertOrThrow, clampInt } from "../../utils/index.js";
 import { Op } from "sequelize";
 const { TeacherProfiles, User, Subjects } = db;
 
@@ -212,19 +212,7 @@ export async function editMyTeacherSubjects(userId, subjectIds) {
     return teacherProfile;
   });
 }
-/**
- * @private
- * @param {string} value
- * @param {number} fallback
- * @param {number} min
- * @param {number} max
- * @returns {number}
- */
-function clampInt(value, fallback, min, max) {
-  const n = Number.parseInt(value, 10);
-  if (Number.isNaN(n)) return fallback;
-  return Math.min(Math.max(n, min), max);
-}
+
 /**
  * Search teachers
  * @param {{city?: string, subjectId?: number, page: number, pageSize: number }} query - filter criteria

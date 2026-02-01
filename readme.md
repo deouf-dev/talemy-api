@@ -11,12 +11,14 @@ Talemy API is a RESTful backend service for the Talemy platform, designed to con
 ## Table of Contents
 
 - [Authentication](#authentication)
+- [Real-time Communication (Socket.IO)](#real-time-communication-socketio)
 - [Endpoints](#endpoints)
   - [Auth](#auth-endpoints)
   - [Teachers](#teacher-endpoints)
   - [Students](#student-endpoints)
   - [Subjects](#subject-endpoints)
   - [Contact Requests](#contact-request-endpoints)
+  - [Conversations](#conversation-endpoints)
 - [Data Models](#data-models)
 - [Error Handling](#error-handling)
 
@@ -37,6 +39,160 @@ Authorization: Bearer <your_jwt_token>
 - **STUDENT**: Can create profiles, search teachers, and send contact requests
 - **TEACHER**: Can create profiles, manage subjects, and respond to contact requests
 - **ADMIN**: Administrative privileges
+
+---
+
+## Real-time Communication (Socket.IO)
+
+The API provides real-time messaging capabilities using Socket.IO for instant communication between students and teachers.
+
+### WebSocket Connection
+
+**URL:** `ws://localhost:<PORT>` or `wss://localhost:<PORT>` (for secure connections)
+
+### Authentication
+
+WebSocket connections must be authenticated using a JWT token. Include the token in the connection handshake:
+
+```javascript
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:3000", {
+  auth: {
+    token: "your_jwt_token_here",
+  },
+});
+```
+
+### Socket Events
+
+#### Client → Server Events
+
+##### Join Conversation
+
+Join a conversation room to receive real-time messages.
+
+**Event:** `conversation:join`
+
+**Payload:**
+
+```json
+{
+  "conversationId": 1
+}
+```
+
+**Response Event:** `conversation:joined`
+
+```json
+{
+  "conversationId": 1
+}
+```
+
+**Error Event:** `socket:error`
+
+```json
+{
+  "code": 404,
+  "type": "NOT_FOUND",
+  "message": "Conversation not found"
+}
+```
+
+---
+
+##### Send Message
+
+Send a real-time message in a conversation.
+
+**Event:** `message:send`
+
+**Payload:**
+
+```json
+{
+  "conversationId": 1,
+  "content": "Hello, when can we start the lessons?"
+}
+```
+
+**Response Event:** `message:sent`
+
+```json
+{
+  "conversationId": 1,
+  "messageId": 42
+}
+```
+
+**Error Event:** `socket:error`
+
+```json
+{
+  "code": 400,
+  "type": "VALIDATION_ERROR",
+  "message": "Message content is required"
+}
+```
+
+**Validation:**
+
+- `conversationId` is required
+- `content` is required and must be a non-empty string
+- `content` maximum length: 2000 characters
+- User must have joined the conversation first
+- Contact request must be ACCEPTED
+
+---
+
+#### Server → Client Events
+
+##### New Message
+
+Received when any participant sends a message in a conversation you've joined.
+
+**Event:** `message:new`
+
+**Payload:**
+
+```json
+{
+  "conversationId": 1,
+  "message": {
+    "id": 42,
+    "conversationId": 1,
+    "senderUserId": 2,
+    "content": "Hello, when can we start the lessons?",
+    "createdAt": "2026-02-01T14:30:00.000Z"
+  }
+}
+```
+
+---
+
+##### Socket Error
+
+Received when an error occurs during socket communication.
+
+**Event:** `socket:error`
+
+**Payload:**
+
+```json
+{
+  "code": 403,
+  "type": "FORBIDDEN",
+  "message": "You are not a participant of this conversation"
+}
+```
+
+**Common Error Types:**
+
+- `VALIDATION_ERROR` (400) - Invalid data provided
+- `FORBIDDEN` (403) - Insufficient permissions
+- `NOT_FOUND` (404) - Resource not found
+- `SERVER_ERROR` (500) - Internal server error
 
 ---
 
@@ -578,6 +734,161 @@ Allows a teacher to accept or reject a contact request.
 
 ---
 
+## Conversation Endpoints
+
+### Get My Conversations
+
+Retrieves all conversations for the authenticated user.
+
+**Endpoint:** `GET /conversations`
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `limit` (optional): Maximum number of conversations to return (default: 50)
+- `offset` (optional): Number of conversations to skip (default: 0)
+
+**Example:** `GET /conversations?limit=20&offset=0`
+
+**Response:** `200 OK`
+
+```json
+{
+  "conversations": [
+    {
+      "id": 1,
+      "partner": {
+        "id": 2,
+        "name": "Jane",
+        "surname": "Smith",
+        "email": "jane.smith@example.com"
+      },
+      "lastMessage": {
+        "id": 42,
+        "senderUserId": 2,
+        "content": "Hello, when can we start?",
+        "createdAt": "2026-02-01T14:30:00.000Z"
+      },
+      "contactRequest": {
+        "id": 5,
+        "status": "ACCEPTED",
+        "message": "Hi, I'm interested in mathematics lessons."
+      },
+      "createdAt": "2026-01-31T10:00:00.000Z",
+      "updatedAt": "2026-02-01T14:30:00.000Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Conversations are ordered by most recent activity (`updatedAt` DESC)
+- The `partner` field represents the other user in the conversation (teacher for students, student for teachers)
+- Only conversations with ACCEPTED contact requests are accessible
+
+---
+
+### Get Conversation Messages
+
+Retrieves messages from a specific conversation with pagination.
+
+**Endpoint:** `GET /conversations/:conversationId/messages`
+
+**Authentication:** Required
+
+**Parameters:**
+
+- `conversationId` (path): The ID of the conversation
+
+**Query Parameters:**
+
+- `page` (optional): Page number (default: 1, min: 1, max: 10,000)
+- `pageSize` (optional): Number of messages per page (default: 20, min: 1, max: 50)
+
+**Example:** `GET /conversations/1/messages?page=1&pageSize=20`
+
+**Response:** `200 OK`
+
+```json
+{
+  "messages": [
+    {
+      "id": 42,
+      "conversationId": 1,
+      "senderUserId": 2,
+      "content": "Hello, when can we start the lessons?",
+      "createdAt": "2026-02-01T14:30:00.000Z"
+    },
+    {
+      "id": 41,
+      "conversationId": 1,
+      "senderUserId": 1,
+      "content": "Hi! I'm available this week.",
+      "createdAt": "2026-02-01T14:25:00.000Z"
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "total": 42
+}
+```
+
+**Notes:**
+
+- Messages are ordered by most recent first (`createdAt` DESC)
+- Only participants of the conversation can access messages
+- Contact request must be ACCEPTED
+
+---
+
+### Send Message (HTTP)
+
+Sends a message in a conversation via HTTP endpoint. For real-time messaging, use Socket.IO instead.
+
+**Endpoint:** `POST /conversations/:conversationId/messages`
+
+**Authentication:** Required
+
+**Parameters:**
+
+- `conversationId` (path): The ID of the conversation
+
+**Request Body:**
+
+```json
+{
+  "content": "Hello, when can we start the lessons?"
+}
+```
+
+**Response:** `201 Created`
+
+```json
+{
+  "id": 42,
+  "conversationId": 1,
+  "senderUserId": 1,
+  "content": "Hello, when can we start the lessons?",
+  "createdAt": "2026-02-01T14:30:00.000Z"
+}
+```
+
+**Validation:**
+
+- `content` is required and must be a non-empty string
+- `content` maximum length: 2000 characters
+- User must be a participant of the conversation
+- Contact request must be ACCEPTED
+
+**Notes:**
+
+- This endpoint is useful for sending messages without establishing a WebSocket connection
+- For real-time bidirectional communication, use the Socket.IO `message:send` event
+
+---
+
 ## Data Models
 
 ### User
@@ -652,6 +963,48 @@ Allows a teacher to accept or reject a contact request.
 }
 ```
 
+### Conversation
+
+```typescript
+{
+  id: number;
+  studentUserId: number;
+  teacherUserId: number;
+  requestId: number;
+  createdAt: Date;
+  updatedAt: Date;
+  student?: User;
+  teacher?: User;
+  contactRequest?: ContactRequest;
+}
+```
+
+**Notes:**
+
+- A conversation is automatically created when a contact request is ACCEPTED
+- Each conversation is linked to a unique contact request via `requestId`
+- Only participants (student and teacher) can access the conversation
+
+### Message
+
+```typescript
+{
+  id: number;
+  conversationId: number;
+  senderUserId: number;
+  content: string;
+  createdAt: Date;
+  conversation?: Conversation;
+  sender?: User;
+}
+```
+
+**Notes:**
+
+- Messages belong to a conversation
+- `senderUserId` indicates who sent the message (either student or teacher)
+- Maximum content length: 2000 characters
+
 ---
 
 ## Error Handling
@@ -674,6 +1027,7 @@ All errors follow a consistent format:
 - `401 Unauthorized` - Authentication required or failed
 - `403 Forbidden` - Insufficient permissions
 - `404 Not Found` - Resource not found
+- `409 Conflict` - Resource conflict (e.g., inactive conversation)
 - `500 Internal Server Error` - Server error
 
 ### Common Error Codes
@@ -683,6 +1037,7 @@ All errors follow a consistent format:
 - `AUTHORIZATION_ERROR` - Insufficient permissions
 - `NOT_FOUND` - Resource not found
 - `DUPLICATE_EMAIL` - Email already exists
+- `CONFLICT` - Conversation is not active or contact request not accepted
 - `INTERNAL_ERROR` - Server-side error
 
 ---
@@ -728,6 +1083,7 @@ All errors follow a consistent format:
 ## Technologies Used
 
 - **Express.js** - Web framework
+- **Socket.IO** - Real-time bidirectional communication
 - **Sequelize** - ORM for MySQL
 - **JWT** - Authentication
 - **bcrypt** - Password hashing
@@ -741,4 +1097,4 @@ For issues or questions, please contact the development team or open an issue in
 
 ---
 
-**Last Updated:** January 31, 2026
+**Last Updated:** February 1, 2026

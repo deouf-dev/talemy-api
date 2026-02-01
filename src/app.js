@@ -5,6 +5,7 @@ import teacherRoutes from "./routes/teachers.routes.js";
 import studentRoutes from "./routes/students.routes.js";
 import subjectRoutes from "./routes/subjects.routes.js";
 import requestRoutes from "./routes/requests.routes.js";
+import conversationRoutes from "./routes/conversations.routes.js";
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.use("/teachers", teacherRoutes);
 app.use("/students", studentRoutes);
 app.use("/subjects", subjectRoutes);
 app.use("/requests", requestRoutes);
+app.use("/conversations", conversationRoutes);
 app.use(errorHandler);
 export default app;

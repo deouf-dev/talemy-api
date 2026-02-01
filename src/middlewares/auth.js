@@ -1,5 +1,4 @@
-import { assertOrThrow, AppError } from "../utils/errors.js";
-import { verifyAccessToken } from "../utils/jwt.js";
+import { assertOrThrow, AppError, verifyAccessToken } from "../utils/index.js";
 
 export function requireAuth(req, res, next) {
   const authHeader = req.headers.authorization;

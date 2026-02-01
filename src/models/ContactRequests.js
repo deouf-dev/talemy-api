@@ -10,12 +10,10 @@ export default (sequelize, DataTypes) => {
       studentUserId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: "student_user_id",
       },
       teacherUserId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        field: "teacher_user_id",
       },
       status: {
         type: DataTypes.ENUM("PENDING", "ACCEPTED", "REJECTED"),
@@ -42,11 +40,11 @@ export default (sequelize, DataTypes) => {
   ContactRequests.associate = (models) => {
     ContactRequests.belongsTo(models.User, {
       as: "student",
-      foreignKey: "student_user_id",
+      foreignKey: "studentUserId",
     });
     ContactRequests.belongsTo(models.User, {
       as: "teacher",
-      foreignKey: "teacher_user_id",
+      foreignKey: "teacherUserId",
     });
   };
 

@@ -6,7 +6,7 @@ import {
 } from "../services/requests/requests.service.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/requireRole.js";
-import { assertOrThrow } from "../utils/errors.js";
+import { assertOrThrow } from "../utils/index.js";
 const router = Router();
 
 router.post(

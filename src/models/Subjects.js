@@ -16,6 +16,7 @@ export default (sequelize, DataTypes) => {
     {
       tableName: "subjects",
       timestamps: false,
+      underscored: true,
     },
   );
   Subjects.associate = (models) => {

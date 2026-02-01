@@ -23,7 +23,6 @@ export default (sequelize, DataTypes) => {
       passwordHash: {
         type: DataTypes.STRING,
         allowNull: false,
-        field: "password_hash",
       },
       role: {
         type: DataTypes.ENUM("STUDENT", "TEACHER", "ADMIN"),
@@ -34,8 +33,6 @@ export default (sequelize, DataTypes) => {
     {
       tableName: "users",
       underscored: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
       defaultScope: {
         attributes: { exclude: ["password_hash"] },
       },

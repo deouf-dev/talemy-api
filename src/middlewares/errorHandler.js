@@ -1,4 +1,4 @@
-import { isAppError } from "../utils/errors.js";
+import { isAppError } from "../utils/index.js";
 
 export function errorHandler(err, req, res, next) {
   if (isAppError(err)) {

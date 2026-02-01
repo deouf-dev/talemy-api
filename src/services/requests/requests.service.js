@@ -1,5 +1,5 @@
 import db from "../../models/index.js";
-import { assertOrThrow } from "../../utils/errors.js";
+import { assertOrThrow } from "../../utils/index.js";
 const { ContactRequests, User } = db;
 
 /**

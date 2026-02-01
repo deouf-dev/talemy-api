@@ -12,7 +12,6 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
-        field: "user_id",
       },
       city: {
         type: DataTypes.STRING,
@@ -35,8 +34,6 @@ export default (sequelize, DataTypes) => {
     {
       tableName: "student_profiles",
       underscored: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
     },
   );
 };

@@ -12,7 +12,6 @@ export default (sequelize, DataTypes) => {
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
-        field: "user_id",
       },
       subjectId: {
         type: DataTypes.INTEGER,
@@ -24,12 +23,12 @@ export default (sequelize, DataTypes) => {
         },
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
-        field: "subject_id",
       },
     },
     {
       tableName: "teacher_subjects",
       timestamps: false,
+      underscored: true,
     },
   );
 };

@@ -1,7 +1,10 @@
 import db from "../../models/index.js";
-import { hashPassword, comparePassword } from "../../utils/index.js";
-import { assertOrThrow } from "../../utils/errors.js";
-import { generateAccessToken } from "../../utils/jwt.js";
+import {
+  hashPassword,
+  comparePassword,
+  assertOrThrow,
+  generateAccessToken,
+} from "../../utils/index.js";
 const { User, StudentProfiles, TeacherProfiles, Subjects } = db;
 
 function normalizeEmail(email) {

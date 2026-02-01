@@ -12,7 +12,6 @@ export default (sequelize, DataTypes) => {
         allowNull: false,
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
-        field: "user_id",
       },
       bio: {
         type: DataTypes.TEXT,
@@ -25,26 +24,21 @@ export default (sequelize, DataTypes) => {
       hourlyRate: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: true,
-        field: "hourly_rate",
       },
       createdAt: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
-        field: "created_at",
       },
       updatedAt: {
         allowNull: false,
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW,
-        field: "updated_at",
       },
     },
     {
       tableName: "teacher_profiles",
       underscored: true,
-      createdAt: "created_at",
-      updatedAt: "updated_at",
     },
   );
 
