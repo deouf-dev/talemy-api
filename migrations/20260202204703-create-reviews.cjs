@@ -3,24 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("messages", {
+    await queryInterface.createTable("reviews", {
       id: {
-        allowNull: false,
-        autoIncrement: true,
+        type: Sequelize.INTEGER,
         primaryKey: true,
-        type: Sequelize.INTEGER,
-      },
-      conversation_id: {
-        type: Sequelize.INTEGER,
+        autoIncrement: true,
         allowNull: false,
-        references: {
-          model: "conversations",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
       },
-      sender_user_id: {
+      teacher_user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -30,14 +20,23 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      content: {
-        type: Sequelize.TEXT,
+      student_user_id: {
+        type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: "users",
+          key: "id",
+        },
+        onUpdate: "CASCADE",
+        onDelete: "CASCADE",
       },
-      is_read: {
-        type: Sequelize.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
+      rating: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+      },
+      comment: {
+        type: Sequelize.TEXT,
+        allowNull: true,
       },
       created_at: {
         allowNull: false,
@@ -48,6 +47,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("messages");
+    await queryInterface.dropTable("reviews");
   },
 };

@@ -28,6 +28,16 @@ module.exports = {
         type: Sequelize.DECIMAL(10, 2),
         allowNull: true,
       },
+      rating_avg: {
+        type: Sequelize.DECIMAL(3, 2),
+        allowNull: true,
+        defaultValue: 0.0,
+      },
+      reviews_count: {
+        type: Sequelize.INTEGER,
+        allowNull: true,
+        defaultValue: 0,
+      },
       created_at: {
         allowNull: false,
         type: Sequelize.DATE,

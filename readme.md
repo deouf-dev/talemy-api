@@ -19,6 +19,9 @@ Talemy API is a RESTful backend service for the Talemy platform, designed to con
   - [Subjects](#subject-endpoints)
   - [Contact Requests](#contact-request-endpoints)
   - [Conversations](#conversation-endpoints)
+  - [Lessons](#lesson-endpoints)
+  - [Reviews](#review-endpoints)
+  - [Availability Slots](#availability-slots-endpoints)
 - [Data Models](#data-models)
 - [Error Handling](#error-handling)
 
@@ -886,6 +889,699 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
 
 - This endpoint is useful for sending messages without establishing a WebSocket connection
 - For real-time bidirectional communication, use the Socket.IO `message:send` event
+
+---
+
+## Lesson Endpoints
+
+### Create a Lesson
+
+**Endpoint:** `POST /lessons`
+
+**Authentication:** Required
+
+**Request Body:**
+
+```json
+{
+  "teacherUserId": 2,
+  "studentUserId": 1,
+  "subjectId": 3,
+  "startAt": "2026-02-15T14:00:00.000Z",
+  "durationMin": 60
+}
+```
+
+**Response:** `201 Created`
+
+```json
+{
+  "lesson": {
+    "id": 1,
+    "teacherUserId": 2,
+    "studentUserId": 1,
+    "subjectId": 3,
+    "startAt": "2026-02-15T14:00:00.000Z",
+    "durationMin": 60,
+    "status": "PENDING",
+    "createdAt": "2026-02-02T10:00:00.000Z",
+    "updatedAt": "2026-02-02T10:00:00.000Z"
+  }
+}
+```
+
+**Validation:**
+
+- All fields are required
+- `teacherUserId` and `studentUserId` must be different
+- `durationMin` must be a positive integer
+- `startAt` must be in the future
+- Teacher must have role TEACHER
+
+---
+
+### Get My Lessons
+
+**Endpoint:** `GET /lessons/me`
+
+**Authentication:** Required
+
+**Query Parameters:**
+
+- `status` (optional): Filter by status (PENDING, CONFIRMED, CANCELLED)
+- `page` (optional): Page number (default: 1)
+- `pageSize` (optional): Items per page (default: 20, max: 50)
+
+**Response:** `200 OK`
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "teacherUserId": 2,
+      "studentUserId": 1,
+      "subjectId": 3,
+      "startAt": "2026-02-15T14:00:00.000Z",
+      "durationMin": 60,
+      "status": "CONFIRMED",
+      "teacher": {
+        "id": 2,
+        "name": "John",
+        "surname": "Doe",
+        "email": "john@example.com"
+      },
+      "student": {
+        "id": 1,
+        "name": "Jane",
+        "surname": "Smith",
+        "email": "jane@example.com"
+      },
+      "subject": {
+        "id": 3,
+        "name": "Mathematics"
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "total": 1
+}
+```
+
+---
+
+### Get Upcoming Lessons
+
+**Endpoint:** `GET /lessons/upcoming`
+
+**Authentication:** Required
+
+**Response:** `200 OK`
+
+```json
+{
+  "lessons": [
+    {
+      "id": 1,
+      "teacherUserId": 2,
+      "studentUserId": 1,
+      "subjectId": 3,
+      "startAt": "2026-02-15T14:00:00.000Z",
+      "durationMin": 60,
+      "status": "CONFIRMED",
+      "teacher": {
+        "id": 2,
+        "name": "John",
+        "surname": "Doe",
+        "email": "john@example.com"
+      },
+      "student": {
+        "id": 1,
+        "name": "Jane",
+        "surname": "Smith",
+        "email": "jane@example.com"
+      },
+      "subject": {
+        "id": 3,
+        "name": "Mathematics"
+      }
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Returns up to 10 upcoming lessons (PENDING or CONFIRMED status)
+- Sorted by start date (ascending)
+
+---
+
+### Get Lesson by ID
+
+**Endpoint:** `GET /lessons/:lessonId`
+
+**Authentication:** Required
+
+**Parameters:**
+
+- `lessonId` (path): The ID of the lesson
+
+**Response:** `200 OK`
+
+```json
+{
+  "lesson": {
+    "id": 1,
+    "teacherUserId": 2,
+    "studentUserId": 1,
+    "subjectId": 3,
+    "startAt": "2026-02-15T14:00:00.000Z",
+    "durationMin": 60,
+    "status": "CONFIRMED",
+    "teacher": {
+      "id": 2,
+      "name": "John",
+      "surname": "Doe",
+      "email": "john@example.com"
+    },
+    "student": {
+      "id": 1,
+      "name": "Jane",
+      "surname": "Smith",
+      "email": "jane@example.com"
+    },
+    "subject": {
+      "id": 3,
+      "name": "Mathematics"
+    }
+  }
+}
+```
+
+**Authorization:**
+
+- Only the teacher or student involved in the lesson can access it
+
+---
+
+### Update Lesson Status
+
+**Endpoint:** `PATCH /lessons/:lessonId/status`
+
+**Authentication:** Required
+
+**Parameters:**
+
+- `lessonId` (path): The ID of the lesson
+
+**Request Body:**
+
+```json
+{
+  "status": "CONFIRMED"
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "lesson": {
+    "id": 1,
+    "status": "CONFIRMED",
+    ...
+  }
+}
+```
+
+**Validation:**
+
+- `status` must be one of: PENDING, CONFIRMED, CANCELLED
+- Only the teacher or student involved can update the status
+
+---
+
+### Delete a Lesson
+
+**Endpoint:** `DELETE /lessons/:lessonId`
+
+**Authentication:** Required
+
+**Parameters:**
+
+- `lessonId` (path): The ID of the lesson
+
+**Response:** `204 No Content`
+
+**Authorization:**
+
+- Only the teacher or student involved in the lesson can delete it
+
+---
+
+## Review Endpoints
+
+### Create a Review
+
+**Endpoint:** `POST /reviews`
+
+**Authentication:** Required (STUDENT role only)
+
+**Request Body:**
+
+```json
+{
+  "teacherUserId": 2,
+  "rating": 5,
+  "comment": "Excellent teacher! Very patient and knowledgeable."
+}
+```
+
+**Response:** `201 Created`
+
+```json
+{
+  "review": {
+    "id": 1,
+    "teacherUserId": 2,
+    "studentUserId": 1,
+    "rating": 5,
+    "comment": "Excellent teacher! Very patient and knowledgeable.",
+    "createdAt": "2026-02-02T10:00:00.000Z"
+  }
+}
+```
+
+**Validation:**
+
+- `teacherUserId` and `rating` are required
+- `rating` must be an integer between 1 and 5
+- `comment` maximum length: 1000 characters
+- Cannot review the same teacher twice
+- Teacher profile rating average is automatically updated
+
+---
+
+### Get My Reviews (Student)
+
+**Endpoint:** `GET /reviews/me`
+
+**Authentication:** Required (STUDENT role only)
+
+**Query Parameters:**
+
+- `page` (optional): Page number (default: 1)
+- `pageSize` (optional): Items per page (default: 20, max: 50)
+
+**Response:** `200 OK`
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "teacherUserId": 2,
+      "studentUserId": 1,
+      "rating": 5,
+      "comment": "Excellent teacher!",
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "teacher": {
+        "id": 2,
+        "name": "John",
+        "surname": "Doe"
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "total": 1
+}
+```
+
+---
+
+### Get Teacher Reviews
+
+**Endpoint:** `GET /reviews/teacher/:teacherUserId`
+
+**Authentication:** Not required
+
+**Parameters:**
+
+- `teacherUserId` (path): The ID of the teacher
+
+**Query Parameters:**
+
+- `page` (optional): Page number (default: 1)
+- `pageSize` (optional): Items per page (default: 20, max: 50)
+
+**Response:** `200 OK`
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "teacherUserId": 2,
+      "studentUserId": 1,
+      "rating": 5,
+      "comment": "Excellent teacher!",
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "student": {
+        "id": 1,
+        "name": "Jane",
+        "surname": "Smith"
+      }
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "total": 1
+}
+```
+
+**Notes:**
+
+- Also accessible via `/teachers/:userId/reviews`
+
+---
+
+### Get Review by ID
+
+**Endpoint:** `GET /reviews/:reviewId`
+
+**Authentication:** Required
+
+**Parameters:**
+
+- `reviewId` (path): The ID of the review
+
+**Response:** `200 OK`
+
+```json
+{
+  "review": {
+    "id": 1,
+    "teacherUserId": 2,
+    "studentUserId": 1,
+    "rating": 5,
+    "comment": "Excellent teacher!",
+    "createdAt": "2026-02-02T10:00:00.000Z",
+    "teacher": {
+      "id": 2,
+      "name": "John",
+      "surname": "Doe"
+    },
+    "student": {
+      "id": 1,
+      "name": "Jane",
+      "surname": "Smith"
+    }
+  }
+}
+```
+
+---
+
+### Update a Review
+
+**Endpoint:** `PATCH /reviews/:reviewId`
+
+**Authentication:** Required (STUDENT role only)
+
+**Parameters:**
+
+- `reviewId` (path): The ID of the review
+
+**Request Body:**
+
+```json
+{
+  "rating": 4,
+  "comment": "Updated review comment"
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "review": {
+    "id": 1,
+    "rating": 4,
+    "comment": "Updated review comment",
+    ...
+  }
+}
+```
+
+**Validation:**
+
+- At least one field must be provided
+- Only the student who created the review can update it
+- Teacher rating average is automatically recalculated
+
+---
+
+### Delete a Review
+
+**Endpoint:** `DELETE /reviews/:reviewId`
+
+**Authentication:** Required (STUDENT role only)
+
+**Parameters:**
+
+- `reviewId` (path): The ID of the review
+
+**Response:** `204 No Content`
+
+**Authorization:**
+
+- Only the student who created the review can delete it
+- Teacher rating average is automatically recalculated
+
+---
+
+## Availability Slots Endpoints
+
+### Create an Availability Slot
+
+**Endpoint:** `POST /availability`
+
+**Authentication:** Required (TEACHER role only)
+
+**Request Body:**
+
+```json
+{
+  "dayOfWeek": 1,
+  "startAt": "2026-02-03T09:00:00.000Z",
+  "endAt": "2026-02-03T12:00:00.000Z"
+}
+```
+
+**Response:** `201 Created`
+
+```json
+{
+  "slot": {
+    "id": 1,
+    "teacherUserId": 2,
+    "dayOfWeek": 1,
+    "startAt": "2026-02-03T09:00:00.000Z",
+    "endAt": "2026-02-03T12:00:00.000Z",
+    "createdAt": "2026-02-02T10:00:00.000Z",
+    "updatedAt": "2026-02-02T10:00:00.000Z"
+  }
+}
+```
+
+**Validation:**
+
+- All fields are required
+- `dayOfWeek` must be an integer between 0 (Sunday) and 6 (Saturday)
+- `startAt` must be before `endAt`
+- Slot cannot overlap with existing availability slots
+
+---
+
+### Get My Availability Slots
+
+**Endpoint:** `GET /availability/me`
+
+**Authentication:** Required (TEACHER role only)
+
+**Response:** `200 OK`
+
+```json
+{
+  "slots": [
+    {
+      "id": 1,
+      "teacherUserId": 2,
+      "dayOfWeek": 1,
+      "startAt": "2026-02-03T09:00:00.000Z",
+      "endAt": "2026-02-03T12:00:00.000Z",
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "updatedAt": "2026-02-02T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+---
+
+### Get Teacher Availability
+
+**Endpoint:** `GET /availability/teacher/:teacherUserId`
+
+**Authentication:** Not required
+
+**Parameters:**
+
+- `teacherUserId` (path): The ID of the teacher
+
+**Query Parameters:**
+
+- `dayOfWeek` (optional): Filter by day of week (0-6)
+
+**Response:** `200 OK`
+
+```json
+{
+  "slots": [
+    {
+      "id": 1,
+      "teacherUserId": 2,
+      "dayOfWeek": 1,
+      "startAt": "2026-02-03T09:00:00.000Z",
+      "endAt": "2026-02-03T12:00:00.000Z",
+      "createdAt": "2026-02-02T10:00:00.000Z",
+      "updatedAt": "2026-02-02T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+
+- Also accessible via `/teachers/:userId/availability`
+
+---
+
+### Get Availability Slot by ID
+
+**Endpoint:** `GET /availability/:slotId`
+
+**Authentication:** Required (TEACHER role only)
+
+**Parameters:**
+
+- `slotId` (path): The ID of the availability slot
+
+**Response:** `200 OK`
+
+```json
+{
+  "slot": {
+    "id": 1,
+    "teacherUserId": 2,
+    "dayOfWeek": 1,
+    "startAt": "2026-02-03T09:00:00.000Z",
+    "endAt": "2026-02-03T12:00:00.000Z",
+    "createdAt": "2026-02-02T10:00:00.000Z",
+    "updatedAt": "2026-02-02T10:00:00.000Z"
+  }
+}
+```
+
+**Authorization:**
+
+- Only the teacher who created the slot can access it
+
+---
+
+### Update an Availability Slot
+
+**Endpoint:** `PATCH /availability/:slotId`
+
+**Authentication:** Required (TEACHER role only)
+
+**Parameters:**
+
+- `slotId` (path): The ID of the availability slot
+
+**Request Body:**
+
+```json
+{
+  "dayOfWeek": 2,
+  "startAt": "2026-02-04T10:00:00.000Z",
+  "endAt": "2026-02-04T13:00:00.000Z"
+}
+```
+
+**Response:** `200 OK`
+
+```json
+{
+  "slot": {
+    "id": 1,
+    "teacherUserId": 2,
+    "dayOfWeek": 2,
+    "startAt": "2026-02-04T10:00:00.000Z",
+    "endAt": "2026-02-04T13:00:00.000Z",
+    "createdAt": "2026-02-02T10:00:00.000Z",
+    "updatedAt": "2026-02-02T15:30:00.000Z"
+  }
+}
+```
+
+**Validation:**
+
+- At least one field must be provided
+- Only the teacher who created the slot can update it
+- Updated slot cannot overlap with other existing slots
+
+---
+
+### Delete an Availability Slot
+
+**Endpoint:** `DELETE /availability/:slotId`
+
+**Authentication:** Required (TEACHER role only)
+
+**Parameters:**
+
+- `slotId` (path): The ID of the availability slot
+
+**Response:** `204 No Content`
+
+**Authorization:**
+
+- Only the teacher who created the slot can delete it
+
+---
+
+### Delete All Availability Slots
+
+**Endpoint:** `DELETE /availability`
+
+**Authentication:** Required (TEACHER role only)
+
+**Response:** `200 OK`
+
+```json
+{
+  "deletedCount": 5
+}
+```
+
+**Notes:**
+
+- Deletes all availability slots for the authenticated teacher
 
 ---
 

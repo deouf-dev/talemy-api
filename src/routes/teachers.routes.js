@@ -6,6 +6,9 @@ import {
   editMyTeacherSubjects,
   searchTeachers,
 } from "../services/teachers/teachers.service.js";
+import { getTeacherReviews } from "../services/reviews/reviews.service.js";
+import { getTeacherAvailability } from "../services/availability/availability.service.js";
+import { getUserLessons } from "../services/lessons/lessons.service.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/requireRole.js";
 import { assertOrThrow } from "../utils/index.js";
@@ -74,6 +77,97 @@ router.get("/", async (req, res, next) => {
       pageSize: req.query.pageSize,
     });
     res.status(200).json({ ...result });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * Get reviews for a specific teacher
+ * GET /teachers/:userId/reviews
+ */
+router.get("/:userId/reviews", async (req, res, next) => {
+  try {
+    const teacherUserId = Number(req.params.userId);
+    assertOrThrow(
+      Number.isInteger(teacherUserId),
+      400,
+      "VALIDATION_ERROR",
+      "Invalid teacher ID",
+    );
+
+    const result = await getTeacherReviews({
+      teacherUserId,
+      page: req.query.page,
+      pageSize: req.query.pageSize,
+    });
+
+    res.status(200).json(result);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * Get availability slots for a specific teacher
+ * GET /teachers/:userId/availability
+ */
+router.get("/:userId/availability", async (req, res, next) => {
+  try {
+    const teacherUserId = Number(req.params.userId);
+    assertOrThrow(
+      Number.isInteger(teacherUserId),
+      400,
+      "VALIDATION_ERROR",
+      "Invalid teacher ID",
+    );
+
+    const dayOfWeek = req.query.dayOfWeek
+      ? Number(req.query.dayOfWeek)
+      : undefined;
+
+    const slots = await getTeacherAvailability({
+      teacherUserId,
+      dayOfWeek,
+    });
+
+    res.status(200).json({ slots });
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * Get lessons for a specific teacher
+ * GET /teachers/:userId/lessons
+ */
+router.get("/:userId/lessons", requireAuth, async (req, res, next) => {
+  try {
+    const teacherUserId = Number(req.params.userId);
+    assertOrThrow(
+      Number.isInteger(teacherUserId),
+      400,
+      "VALIDATION_ERROR",
+      "Invalid teacher ID",
+    );
+
+    // Only the teacher themselves can see their lessons
+    assertOrThrow(
+      req.user.id === teacherUserId,
+      403,
+      "FORBIDDEN",
+      "You can only view your own lessons",
+    );
+
+    const result = await getUserLessons({
+      userId: teacherUserId,
+      role: "TEACHER",
+      status: req.query.status,
+      page: req.query.page,
+      pageSize: req.query.pageSize,
+    });
+
+    res.status(200).json(result);
   } catch (error) {
     return next(error);
   }

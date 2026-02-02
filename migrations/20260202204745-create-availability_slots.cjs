@@ -3,24 +3,14 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    await queryInterface.createTable("messages", {
+    await queryInterface.createTable("availability_slots", {
       id: {
-        allowNull: false,
-        autoIncrement: true,
+        type: Sequelize.INTEGER,
         primaryKey: true,
-        type: Sequelize.INTEGER,
-      },
-      conversation_id: {
-        type: Sequelize.INTEGER,
+        autoIncrement: true,
         allowNull: false,
-        references: {
-          model: "conversations",
-          key: "id",
-        },
-        onUpdate: "CASCADE",
-        onDelete: "CASCADE",
       },
-      sender_user_id: {
+      teacher_user_id: {
         type: Sequelize.INTEGER,
         allowNull: false,
         references: {
@@ -30,16 +20,24 @@ module.exports = {
         onUpdate: "CASCADE",
         onDelete: "CASCADE",
       },
-      content: {
-        type: Sequelize.TEXT,
+      day_of_week: {
+        type: Sequelize.TINYINT,
         allowNull: false,
       },
-      is_read: {
-        type: Sequelize.BOOLEAN,
+      start_time: {
+        type: Sequelize.TIME,
         allowNull: false,
-        defaultValue: false,
+      },
+      end_time: {
+        type: Sequelize.TIME,
+        allowNull: false,
       },
       created_at: {
+        allowNull: false,
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
+      },
+      updated_at: {
         allowNull: false,
         type: Sequelize.DATE,
         defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
@@ -48,6 +46,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    await queryInterface.dropTable("messages");
+    await queryInterface.dropTable("availability_slots");
   },
 };
