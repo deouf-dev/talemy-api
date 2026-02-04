@@ -42,7 +42,6 @@ router.post("/", requireAuth, async (req, res, next) => {
       "durationMin is required",
     );
 
-    // Verify that the requesting user is either the teacher or the student
     assertOrThrow(
       req.user.id === teacherUserId || req.user.id === studentUserId,
       403,

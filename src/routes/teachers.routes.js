@@ -151,7 +151,6 @@ router.get("/:userId/lessons", requireAuth, async (req, res, next) => {
       "Invalid teacher ID",
     );
 
-    // Only the teacher themselves can see their lessons
     assertOrThrow(
       req.user.id === teacherUserId,
       403,

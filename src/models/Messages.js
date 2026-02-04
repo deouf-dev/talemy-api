@@ -15,7 +15,7 @@ export default (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      senderId: {
+      senderUserId: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
@@ -36,6 +36,9 @@ export default (sequelize, DataTypes) => {
     {
       tableName: "messages",
       underscored: true,
+      timestamps: true,
+      createdAt: "createdAt",
+      updatedAt: false,
     },
   );
 
@@ -46,7 +49,7 @@ export default (sequelize, DataTypes) => {
     });
     Messages.belongsTo(models.User, {
       as: "sender",
-      foreignKey: "senderId",
+      foreignKey: "senderUserId",
     });
   };
   return Messages;

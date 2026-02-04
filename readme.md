@@ -313,7 +313,6 @@ Retrieves the authenticated teacher's profile.
     "bio": "Experienced mathematics teacher",
     "city": "Paris",
     "hourlyRate": 35.0,
-    "phone": "+33612345678",
     "user": {
       "id": 1,
       "name": "Jane",
@@ -346,8 +345,7 @@ Updates the authenticated teacher's profile information.
 {
   "bio": "Updated bio text",
   "city": "Lyon",
-  "hourlyRate": 40.0,
-  "phone": "+33698765432"
+  "hourlyRate": 40.0
 }
 ```
 
@@ -360,8 +358,7 @@ Updates the authenticated teacher's profile information.
     "userId": 1,
     "bio": "Updated bio text",
     "city": "Lyon",
-    "hourlyRate": 40.0,
-    "phone": "+33698765432"
+    "hourlyRate": 40.0
   }
 }
 ```
@@ -521,7 +518,6 @@ Retrieves the authenticated student's profile.
     "id": 1,
     "userId": 1,
     "city": "Paris",
-    "phone": "+33612345678",
     "user": {
       "id": 1,
       "name": "John",
@@ -546,8 +542,7 @@ Updates the authenticated student's profile information.
 
 ```json
 {
-  "city": "Lyon",
-  "phone": "+33698765432"
+  "city": "Lyon"
 }
 ```
 
@@ -558,8 +553,7 @@ Updates the authenticated student's profile information.
   "profile": {
     "id": 1,
     "userId": 1,
-    "city": "Lyon",
-    "phone": "+33698765432"
+    "city": "Lyon"
   }
 }
 ```
@@ -1610,7 +1604,8 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
   bio: string;
   city: string;
   hourlyRate: number;
-  phone: string;
+  ratingAvg: Decimal;
+  reviewsCount: number;
   createdAt: Date;
   updatedAt: Date;
   user?: User;
@@ -1625,7 +1620,8 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
   id: number;
   userId: number;
   city: string;
-  phone: string;
+  track: string;
+  level: "MIDDLE_SCHOOL" | "HIGH_SCHOOL" | "UNIVERSITY" | "OTHER";
   createdAt: Date;
   updatedAt: Date;
   user?: User;

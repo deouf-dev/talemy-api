@@ -6,7 +6,7 @@ const { TeacherProfiles, User, Subjects } = db;
 /**
  * Get my teacher profile
  * @param {string} userId
- * @returns {Promise<{userId: string, bio: string, city: string, hourlyRate: string, createdAt: Date, updatedAt: Date}>}
+ * @returns {Promise<{userId: string, bio: string, city: string, hourlyRate: string, user: object, createdAt: Date, updatedAt: Date}>}
  */
 export async function getMyTeacherProfile(userId) {
   const teacherProfile = await TeacherProfiles.findByPk(userId, {
@@ -37,6 +37,13 @@ export async function getMyTeacherProfile(userId) {
     city: teacherProfile.city,
     ratingAvg: teacherProfile.ratingAvg,
     reviewsCount: teacherProfile.reviewsCount,
+    user: {
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      role: user.role,
+    },
     hourlyRate: teacherProfile.hourlyRate,
     subjects: teacherProfile.subjects,
     createdAt: teacherProfile.createdAt,

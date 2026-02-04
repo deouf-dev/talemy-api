@@ -6,13 +6,12 @@ const { AvailabilitySlots, User } = db;
 
 /**
  * Create an availability slot for a teacher
- * @param {{teacherUserId: number, dayOfWeek: number, startAt: Date|string, endAt: Date|string}} payload
+ * @param {{teacherUserId: number, dayOfWeek: number, startTime: Date|string, endTime: Date|string}} payload
  * @returns {Promise<Object>}
  */
 export async function createAvailabilitySlot(payload) {
-  const { teacherUserId, dayOfWeek, startAt, endAt } = payload;
+  const { teacherUserId, dayOfWeek, startTime, endTime } = payload;
 
-  // Verify teacher exists and has the right role
   const teacher = await User.findByPk(teacherUserId);
   assertOrThrow(
     teacher && teacher.role === "TEACHER",
@@ -21,7 +20,6 @@ export async function createAvailabilitySlot(payload) {
     "Teacher not found",
   );
 
-  // Validate dayOfWeek (0 = Sunday, 6 = Saturday)
   assertOrThrow(
     Number.isInteger(dayOfWeek) && dayOfWeek >= 0 && dayOfWeek <= 6,
     400,
@@ -29,10 +27,9 @@ export async function createAvailabilitySlot(payload) {
     "Day of week must be an integer between 0 and 6",
   );
 
-  const startDate = new Date(startAt);
-  const endDate = new Date(endAt);
+  const startDate = new Date(startTime);
+  const endDate = new Date(endTime);
 
-  // Validate dates
   assertOrThrow(
     startDate < endDate,
     400,
@@ -40,26 +37,22 @@ export async function createAvailabilitySlot(payload) {
     "Start time must be before end time",
   );
 
-  // Check for overlapping slots
   const overlappingSlot = await AvailabilitySlots.findOne({
     where: {
       teacherUserId,
       dayOfWeek,
       [Op.or]: [
         {
-          // New slot starts during an existing slot
-          startAt: { [Op.lte]: startDate },
-          endAt: { [Op.gt]: startDate },
+          startTime: { [Op.lte]: startDate },
+          endTime: { [Op.gt]: startDate },
         },
         {
-          // New slot ends during an existing slot
-          startAt: { [Op.lt]: endDate },
-          endAt: { [Op.gte]: endDate },
+          startTime: { [Op.lt]: endDate },
+          endTime: { [Op.gte]: endDate },
         },
         {
-          // New slot completely encompasses an existing slot
-          startAt: { [Op.gte]: startDate },
-          endAt: { [Op.lte]: endDate },
+          startTime: { [Op.gte]: startDate },
+          endTime: { [Op.lte]: endDate },
         },
       ],
     },
@@ -75,8 +68,8 @@ export async function createAvailabilitySlot(payload) {
   const slot = await AvailabilitySlots.create({
     teacherUserId,
     dayOfWeek,
-    startAt: startDate,
-    endAt: endDate,
+    startTime: startDate,
+    endTime: endDate,
   });
 
   return slot;
@@ -88,7 +81,6 @@ export async function createAvailabilitySlot(payload) {
  * @returns {Promise<Array>}
  */
 export async function getTeacherAvailability({ teacherUserId, dayOfWeek }) {
-  // Verify teacher exists
   const teacher = await User.findByPk(teacherUserId);
   assertOrThrow(
     teacher && teacher.role === "TEACHER",
@@ -113,7 +105,7 @@ export async function getTeacherAvailability({ teacherUserId, dayOfWeek }) {
     where: whereClause,
     order: [
       ["dayOfWeek", "ASC"],
-      ["startAt", "ASC"],
+      ["startTime", "ASC"],
     ],
   });
 
@@ -130,7 +122,7 @@ export async function getMyAvailability(teacherUserId) {
     where: { teacherUserId },
     order: [
       ["dayOfWeek", "ASC"],
-      ["startAt", "ASC"],
+      ["startTime", "ASC"],
     ],
   });
 
@@ -147,7 +139,6 @@ export async function getAvailabilitySlotById(slotId, userId) {
   const slot = await AvailabilitySlots.findByPk(slotId);
   assertOrThrow(slot, 404, "NOT_FOUND", "Availability slot not found");
 
-  // Verify the user has access to this slot
   assertOrThrow(
     slot.teacherUserId === userId,
     403,
@@ -160,20 +151,19 @@ export async function getAvailabilitySlotById(slotId, userId) {
 
 /**
  * Update an availability slot
- * @param {{slotId: number, teacherUserId: number, dayOfWeek?: number, startAt?: Date|string, endAt?: Date|string}} params
+ * @param {{slotId: number, teacherUserId: number, dayOfWeek?: number, startTime?: Date|string, endTime?: Date|string}} params
  * @returns {Promise<Object>}
  */
 export async function updateAvailabilitySlot({
   slotId,
   teacherUserId,
   dayOfWeek,
-  startAt,
-  endAt,
+  startTime,
+  endTime,
 }) {
   const slot = await AvailabilitySlots.findByPk(slotId);
   assertOrThrow(slot, 404, "NOT_FOUND", "Availability slot not found");
 
-  // Only the teacher who created the slot can update it
   assertOrThrow(
     slot.teacherUserId === teacherUserId,
     403,
@@ -193,20 +183,19 @@ export async function updateAvailabilitySlot({
     updates.dayOfWeek = dayOfWeek;
   }
 
-  if (startAt !== undefined) {
-    updates.startAt = new Date(startAt);
+  if (startTime !== undefined) {
+    updates.startTime = new Date(startTime);
   }
 
-  if (endAt !== undefined) {
-    updates.endAt = new Date(endAt);
+  if (endTime !== undefined) {
+    updates.endTime = new Date(endTime);
   }
 
-  // Validate dates if both are being updated
-  const finalStartAt = updates.startAt || slot.startAt;
-  const finalEndAt = updates.endAt || slot.endAt;
+  const finalStartTime = updates.startTime || slot.startTime;
+  const finalEndTime = updates.endTime || slot.endTime;
 
   assertOrThrow(
-    finalStartAt < finalEndAt,
+    finalStartTime < finalEndTime,
     400,
     "VALIDATION_ERROR",
     "Start time must be before end time",
@@ -219,7 +208,6 @@ export async function updateAvailabilitySlot({
     "At least one field must be provided",
   );
 
-  // Check for overlapping slots (excluding the current slot)
   const finalDayOfWeek = updates.dayOfWeek ?? slot.dayOfWeek;
   const overlappingSlot = await AvailabilitySlots.findOne({
     where: {
@@ -228,16 +216,16 @@ export async function updateAvailabilitySlot({
       id: { [Op.ne]: slotId },
       [Op.or]: [
         {
-          startAt: { [Op.lte]: finalStartAt },
-          endAt: { [Op.gt]: finalStartAt },
+          startTime: { [Op.lte]: finalStartTime },
+          endTime: { [Op.gt]: finalStartTime },
         },
         {
-          startAt: { [Op.lt]: finalEndAt },
-          endAt: { [Op.gte]: finalEndAt },
+          startTime: { [Op.lt]: finalEndTime },
+          endTime: { [Op.gte]: finalEndTime },
         },
         {
-          startAt: { [Op.gte]: finalStartAt },
-          endAt: { [Op.lte]: finalEndAt },
+          startTime: { [Op.gte]: finalStartTime },
+          endTime: { [Op.lte]: finalEndTime },
         },
       ],
     },
@@ -265,7 +253,6 @@ export async function deleteAvailabilitySlot(slotId, teacherUserId) {
   const slot = await AvailabilitySlots.findByPk(slotId);
   assertOrThrow(slot, 404, "NOT_FOUND", "Availability slot not found");
 
-  // Only the teacher who created the slot can delete it
   assertOrThrow(
     slot.teacherUserId === teacherUserId,
     403,

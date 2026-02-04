@@ -20,7 +20,6 @@ export async function createLesson(payload) {
     "Teacher and student IDs must be different",
   );
 
-  // Verify teacher exists and has the right role
   const teacher = await User.findByPk(teacherUserId);
   assertOrThrow(
     teacher && teacher.role === "TEACHER",
@@ -29,15 +28,12 @@ export async function createLesson(payload) {
     "Teacher not found",
   );
 
-  // Verify student exists
   const student = await User.findByPk(studentUserId);
   assertOrThrow(student, 404, "NOT_FOUND", "Student not found");
 
-  // Verify subject exists
   const subject = await Subjects.findByPk(subjectId);
   assertOrThrow(subject, 404, "NOT_FOUND", "Subject not found");
 
-  // Validate duration
   assertOrThrow(
     Number.isInteger(durationMin) && durationMin > 0,
     400,
@@ -45,7 +41,6 @@ export async function createLesson(payload) {
     "Duration must be a positive integer",
   );
 
-  // Validate start time is in the future
   const startDate = new Date(startAt);
   assertOrThrow(
     startDate > new Date(),
@@ -151,7 +146,6 @@ export async function getLessonById(lessonId, userId) {
 
   assertOrThrow(lesson, 404, "NOT_FOUND", "Lesson not found");
 
-  // Verify the user has access to this lesson
   assertOrThrow(
     lesson.teacherUserId === userId || lesson.studentUserId === userId,
     403,
@@ -178,7 +172,6 @@ export async function updateLessonStatus({ lessonId, userId, status }) {
   const lesson = await Lessons.findByPk(lessonId);
   assertOrThrow(lesson, 404, "NOT_FOUND", "Lesson not found");
 
-  // Only teacher or student can update the lesson
   assertOrThrow(
     lesson.teacherUserId === userId || lesson.studentUserId === userId,
     403,
@@ -221,7 +214,6 @@ export async function deleteLesson(lessonId, userId) {
   const lesson = await Lessons.findByPk(lessonId);
   assertOrThrow(lesson, 404, "NOT_FOUND", "Lesson not found");
 
-  // Only teacher or student can delete the lesson
   assertOrThrow(
     lesson.teacherUserId === userId || lesson.studentUserId === userId,
     403,

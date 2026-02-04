@@ -19,7 +19,6 @@ export async function createReview(payload) {
     "Teacher and student IDs must be different",
   );
 
-  // Verify teacher exists and has the right role
   const teacher = await User.findByPk(teacherUserId);
   assertOrThrow(
     teacher && teacher.role === "TEACHER",
@@ -28,11 +27,9 @@ export async function createReview(payload) {
     "Teacher not found",
   );
 
-  // Verify student exists
   const student = await User.findByPk(studentUserId);
   assertOrThrow(student, 404, "NOT_FOUND", "Student not found");
 
-  // Validate rating
   assertOrThrow(
     Number.isInteger(rating) && rating >= 1 && rating <= 5,
     400,
@@ -40,7 +37,6 @@ export async function createReview(payload) {
     "Rating must be an integer between 1 and 5",
   );
 
-  // Check if review already exists
   const existingReview = await Reviews.findOne({
     where: {
       teacherUserId,
@@ -55,7 +51,6 @@ export async function createReview(payload) {
     "You have already reviewed this teacher",
   );
 
-  // Validate comment if provided
   let normalizedComment = null;
   if (comment !== undefined && comment !== null) {
     normalizedComment = String(comment).trim();
@@ -74,7 +69,6 @@ export async function createReview(payload) {
     comment: normalizedComment || null,
   });
 
-  // Update teacher's rating average
   await updateTeacherRating(teacherUserId);
 
   return review;
@@ -86,8 +80,8 @@ export async function createReview(payload) {
  * @returns {Promise<{items: Array, page: number, pageSize: number, total: number}>}
  */
 export async function getTeacherReviews({ teacherUserId, page, pageSize }) {
-  // Verify teacher exists
   const teacher = await User.findByPk(teacherUserId);
+
   assertOrThrow(
     teacher && teacher.role === "TEACHER",
     404,
@@ -161,7 +155,6 @@ export async function updateReview({
   const review = await Reviews.findByPk(reviewId);
   assertOrThrow(review, 404, "NOT_FOUND", "Review not found");
 
-  // Only the student who created the review can update it
   assertOrThrow(
     review.studentUserId === studentUserId,
     403,
@@ -205,7 +198,6 @@ export async function updateReview({
 
   await review.update(updates);
 
-  // Update teacher's rating average if rating changed
   if (rating !== undefined) {
     await updateTeacherRating(review.teacherUserId);
   }
@@ -238,7 +230,6 @@ export async function deleteReview(reviewId, studentUserId) {
   const review = await Reviews.findByPk(reviewId);
   assertOrThrow(review, 404, "NOT_FOUND", "Review not found");
 
-  // Only the student who created the review can delete it
   assertOrThrow(
     review.studentUserId === studentUserId,
     403,

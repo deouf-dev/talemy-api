@@ -22,12 +22,12 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      startAt: {
-        type: DataTypes.DATE,
+      startTime: {
+        type: DataTypes.TIME,
         allowNull: false,
       },
-      endAt: {
-        type: DataTypes.DATE,
+      endTime: {
+        type: DataTypes.TIME,
         allowNull: false,
       },
       createdAt: {
