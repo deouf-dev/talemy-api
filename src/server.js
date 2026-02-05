@@ -18,6 +18,8 @@ const io = new Server(httpServer, {
 
 socketSetup(io);
 
+export { io };
+
 db.sequelize
   .authenticate()
   .then(async () => {

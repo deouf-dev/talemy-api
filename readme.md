@@ -199,6 +199,163 @@ Received when an error occurs during socket communication.
 
 ---
 
+##### Lesson Created
+
+Received when a new lesson is created involving the user (as teacher or student).
+
+**Event:** `lesson:created`
+
+**Payload:**
+
+```json
+{
+  "lesson": {
+    "id": 10,
+    "teacherUserId": 3,
+    "studentUserId": 1,
+    "subjectId": 5,
+    "startAt": "2026-02-15T14:00:00.000Z",
+    "durationMin": 60,
+    "statusForStudent": "PENDING",
+    "statusForTeacher": "PENDING",
+    "createdAt": "2026-02-05T10:30:00.000Z",
+    "updatedAt": "2026-02-05T10:30:00.000Z",
+    "teacher": {
+      "id": 3,
+      "name": "Jane",
+      "surname": "Smith",
+      "email": "jane.smith@example.com"
+    },
+    "student": {
+      "id": 1,
+      "name": "John",
+      "surname": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "subject": {
+      "id": 5,
+      "name": "Mathematics"
+    }
+  }
+}
+```
+
+---
+
+##### Lesson Status Updated
+
+Received when a lesson status is updated by either the teacher or student.
+
+**Event:** `lesson:statusUpdated`
+
+**Payload:**
+
+```json
+{
+  "lesson": {
+    "id": 10,
+    "teacherUserId": 3,
+    "studentUserId": 1,
+    "subjectId": 5,
+    "startAt": "2026-02-15T14:00:00.000Z",
+    "durationMin": 60,
+    "statusForStudent": "CONFIRMED",
+    "statusForTeacher": "CONFIRMED",
+    "createdAt": "2026-02-05T10:30:00.000Z",
+    "updatedAt": "2026-02-05T11:00:00.000Z",
+    "teacher": {
+      "id": 3,
+      "name": "Jane",
+      "surname": "Smith",
+      "email": "jane.smith@example.com"
+    },
+    "student": {
+      "id": 1,
+      "name": "John",
+      "surname": "Doe",
+      "email": "john.doe@example.com"
+    },
+    "subject": {
+      "id": 5,
+      "name": "Mathematics"
+    }
+  },
+  "updatedBy": 1
+}
+```
+
+---
+
+##### Contact Request Created
+
+Received when a new contact request is created involving the user (as teacher or student).
+
+**Event:** `contactRequest:created`
+
+**Payload:**
+
+```json
+{
+  "contactRequest": {
+    "id": 15,
+    "studentUserId": 1,
+    "teacherUserId": 3,
+    "status": "PENDING",
+    "message": "I would like to learn mathematics with you",
+    "createdAt": "2026-02-05T09:00:00.000Z",
+    "updatedAt": "2026-02-05T09:00:00.000Z",
+    "student": {
+      "id": 1,
+      "name": "John",
+      "surname": "Doe",
+      "email": "john.doe@example.com"
+    }
+  }
+}
+```
+
+---
+
+##### Contact Request Status Updated
+
+Received when a contact request status is updated (accepted or rejected by teacher).
+
+**Event:** `contactRequest:statusUpdated`
+
+**Payload:**
+
+```json
+{
+  "contactRequest": {
+    "id": 15,
+    "studentUserId": 1,
+    "teacherUserId": 3,
+    "status": "ACCEPTED",
+    "message": "I would like to learn mathematics with you",
+    "createdAt": "2026-02-05T09:00:00.000Z",
+    "updatedAt": "2026-02-05T09:30:00.000Z",
+    "student": {
+      "id": 1,
+      "name": "John",
+      "surname": "Doe",
+      "email": "john.doe@example.com"
+    }
+  },
+  "conversation": {
+    "id": 8,
+    "studentUserId": 1,
+    "teacherUserId": 3,
+    "requestId": 15,
+    "createdAt": "2026-02-05T09:30:00.000Z",
+    "updatedAt": "2026-02-05T09:30:00.000Z"
+  }
+}
+```
+
+**Note:** The `conversation` field is only present when the status is `ACCEPTED`.
+
+---
+
 ## Endpoints
 
 ## Auth Endpoints

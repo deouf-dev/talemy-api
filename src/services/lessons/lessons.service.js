@@ -1,6 +1,7 @@
 import db from "../../models/index.js";
 import { assertOrThrow, clampInt } from "../../utils/index.js";
 import { Op } from "sequelize";
+import { io } from "../../server.js";
 
 const { Lessons, User, Subjects } = db;
 
@@ -22,7 +23,7 @@ export async function createLesson(payload) {
 
   const teacher = await User.findByPk(teacherUserId);
   assertOrThrow(
-    teacher && teacher.role === "TEACHER",
+    teacher && teacher.role == "TEACHER",
     404,
     "NOT_FOUND",
     "Teacher not found",
@@ -59,7 +60,36 @@ export async function createLesson(payload) {
     statusForTeacher: "PENDING",
   });
 
-  return lesson;
+  const lessonWithDetails = await Lessons.findByPk(lesson.id, {
+    include: [
+      {
+        model: User,
+        as: "teacher",
+        attributes: ["id", "name", "surname", "email"],
+      },
+      {
+        model: User,
+        as: "student",
+        attributes: ["id", "name", "surname", "email"],
+      },
+      {
+        model: Subjects,
+        as: "subject",
+        attributes: ["id", "name"],
+      },
+    ],
+  });
+
+  if (io) {
+    io.to(`user:${teacherUserId}`).emit("lesson:created", {
+      lesson: lessonWithDetails,
+    });
+    io.to(`user:${studentUserId}`).emit("lesson:created", {
+      lesson: lessonWithDetails,
+    });
+  }
+
+  return lessonWithDetails;
 }
 
 /**
@@ -70,16 +100,16 @@ export async function createLesson(payload) {
 export async function getUserLessons({ userId, role, status, page, pageSize }) {
   const whereClause = {};
 
-  if (role === "TEACHER") {
+  if (role == "TEACHER") {
     whereClause.teacherUserId = userId;
-  } else if (role === "STUDENT") {
+  } else if (role == "STUDENT") {
     whereClause.studentUserId = userId;
   } else {
     throw new Error("Invalid role");
   }
 
   if (status && ["PENDING", "CONFIRMED", "CANCELLED"].includes(status)) {
-    const key = role === "TEACHER" ? "statusForTeacher" : "statusForStudent";
+    const key = role == "TEACHER" ? "statusForTeacher" : "statusForStudent";
     whereClause[key] = status;
   }
 
@@ -149,7 +179,7 @@ export async function getLessonById(lessonId, userId) {
   assertOrThrow(lesson, 404, "NOT_FOUND", "Lesson not found");
 
   assertOrThrow(
-    lesson.teacherUserId === userId || lesson.studentUserId === userId,
+    lesson.teacherUserId == userId || lesson.studentUserId == userId,
     403,
     "FORBIDDEN",
     "You do not have access to this lesson",
@@ -175,13 +205,13 @@ export async function updateLessonStatus({ lessonId, userId, status }) {
   assertOrThrow(lesson, 404, "NOT_FOUND", "Lesson not found");
 
   assertOrThrow(
-    lesson.teacherUserId === userId || lesson.studentUserId === userId,
+    lesson.teacherUserId == userId || lesson.studentUserId == userId,
     403,
     "FORBIDDEN",
     "You do not have permission to update this lesson",
   );
   const key =
-    lesson.teacherUserId === userId ? "statusForTeacher" : "statusForStudent";
+    lesson.teacherUserId == userId ? "statusForTeacher" : "statusForStudent";
   await lesson.update({ [key]: status });
 
   const updatedLesson = await Lessons.findByPk(lessonId, {
@@ -204,6 +234,17 @@ export async function updateLessonStatus({ lessonId, userId, status }) {
     ],
   });
 
+  if (io) {
+    io.to(`user:${updatedLesson.teacherUserId}`).emit("lesson:statusUpdated", {
+      lesson: updatedLesson,
+      updatedBy: userId,
+    });
+    io.to(`user:${updatedLesson.studentUserId}`).emit("lesson:statusUpdated", {
+      lesson: updatedLesson,
+      updatedBy: userId,
+    });
+  }
+
   return updatedLesson;
 }
 
@@ -218,7 +259,7 @@ export async function deleteLesson(lessonId, userId) {
   assertOrThrow(lesson, 404, "NOT_FOUND", "Lesson not found");
 
   assertOrThrow(
-    lesson.teacherUserId === userId || lesson.studentUserId === userId,
+    lesson.teacherUserId == userId || lesson.studentUserId == userId,
     403,
     "FORBIDDEN",
     "You do not have permission to delete this lesson",
@@ -237,10 +278,10 @@ export async function getUpcomingLessons({ userId, role }) {
     startAt: { [Op.gte]: new Date() },
   };
 
-  if (role === "TEACHER") {
+  if (role == "TEACHER") {
     whereClause.teacherUserId = userId;
     whereClause.statusForTeacher = { [Op.in]: ["PENDING", "CONFIRMED"] };
-  } else if (role === "STUDENT") {
+  } else if (role == "STUDENT") {
     whereClause.studentUserId = userId;
     whereClause.statusForStudent = { [Op.in]: ["PENDING", "CONFIRMED"] };
   } else {

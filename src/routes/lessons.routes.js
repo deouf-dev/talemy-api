@@ -20,7 +20,7 @@ router.post("/", requireAuth, async (req, res, next) => {
   try {
     const { teacherUserId, studentUserId, subjectId, startAt, durationMin } =
       req.body;
-
+    console.log(teacherUserId);
     assertOrThrow(
       teacherUserId,
       400,
@@ -43,7 +43,7 @@ router.post("/", requireAuth, async (req, res, next) => {
     );
 
     assertOrThrow(
-      req.user.id === teacherUserId || req.user.id === studentUserId,
+      req.user.id == teacherUserId || req.user.id == studentUserId,
       403,
       "FORBIDDEN",
       "You can only create lessons for yourself",

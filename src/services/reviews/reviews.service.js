@@ -240,7 +240,6 @@ export async function deleteReview(reviewId, studentUserId) {
   const teacherUserId = review.teacherUserId;
   await review.destroy();
 
-  // Update teacher's rating average
   await updateTeacherRating(teacherUserId);
 }
 

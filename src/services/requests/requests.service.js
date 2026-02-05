@@ -1,5 +1,6 @@
 import db from "../../models/index.js";
 import { assertOrThrow } from "../../utils/index.js";
+import { io } from "../../server.js";
 const { ContactRequests, User, Conversations } = db;
 
 /**
@@ -58,6 +59,29 @@ export async function createContactRequest(payload) {
       teacherUserId,
       message: normaliseMessage(message),
     });
+
+    const requestWithDetails = await ContactRequests.findByPk(
+      contactRequest.id,
+      {
+        include: [
+          {
+            model: User,
+            as: "student",
+            attributes: ["id", "name", "surname", "email"],
+          },
+        ],
+      },
+    );
+
+    if (io) {
+      io.to(`user:${teacherUserId}`).emit("contactRequest:created", {
+        contactRequest: requestWithDetails,
+      });
+      io.to(`user:${studentUserId}`).emit("contactRequest:created", {
+        contactRequest: requestWithDetails,
+      });
+    }
+
     return contactRequest;
   } catch (error) {
     throw error;
@@ -124,13 +148,43 @@ export async function updateContactRequestStatus(requestId, userId, newStatus) {
   console.log(contactRequest.toJSON());
   contactRequest.status = newStatus;
   await contactRequest.save();
+
+  let conversation = null;
   if (newStatus === "ACCEPTED") {
-    await Conversations.create({
+    conversation = await Conversations.create({
       studentUserId: contactRequest.studentUserId,
       teacherUserId: contactRequest.teacherUserId,
       requestId: contactRequest.id,
     });
   }
+
+  const requestWithDetails = await ContactRequests.findByPk(contactRequest.id, {
+    include: [
+      {
+        model: User,
+        as: "student",
+        attributes: ["id", "name", "surname", "email"],
+      },
+    ],
+  });
+
+  if (io) {
+    io.to(`user:${contactRequest.teacherUserId}`).emit(
+      "contactRequest:statusUpdated",
+      {
+        contactRequest: requestWithDetails,
+        conversation: conversation,
+      },
+    );
+    io.to(`user:${contactRequest.studentUserId}`).emit(
+      "contactRequest:statusUpdated",
+      {
+        contactRequest: requestWithDetails,
+        conversation: conversation,
+      },
+    );
+  }
+
   return {
     id: contactRequest.id,
     studentUserId: contactRequest.studentUserId,

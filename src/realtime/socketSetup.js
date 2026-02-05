@@ -6,6 +6,8 @@ export function socketSetup(io) {
   io.use(socketAuth);
 
   io.on("connection", (socket) => {
+    socket.join(`user:${socket.user.id}`);
+
     socket.on("conversation:join", async ({ conversationId }) => {
       try {
         const conversation = await db.Conversations.findByPk(conversationId);
@@ -129,9 +131,13 @@ export function socketSetup(io) {
         });
       }
     });
+    socket.on("conversation:leave", ({ conversationId }) => {
+      socket.leave(`conversation:${conversationId}`);
+      socket.emit("conversation:left", { conversationId });
+    });
 
-    socket.on("disconnect", (r) => {
-      console.log(`Socket disconnected: ${socket.id}`, r);
+    socket.on("disconnect", () => {
+      socket.leave(`user:${socket.user.id}`);
     });
   });
 }
