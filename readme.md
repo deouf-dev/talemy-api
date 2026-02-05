@@ -917,7 +917,8 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
     "subjectId": 3,
     "startAt": "2026-02-15T14:00:00.000Z",
     "durationMin": 60,
-    "status": "PENDING",
+    "statusForTeacher": "PENDING",
+    "statusForStudent": "PENDING",
     "createdAt": "2026-02-02T10:00:00.000Z",
     "updatedAt": "2026-02-02T10:00:00.000Z"
   }
@@ -1003,7 +1004,8 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
       "subjectId": 3,
       "startAt": "2026-02-15T14:00:00.000Z",
       "durationMin": 60,
-      "status": "CONFIRMED",
+      "statusForTeacher": "CONFIRMED",
+      "statusForStudent": "CONFIRMED",
       "teacher": {
         "id": 2,
         "name": "John",
@@ -1053,7 +1055,8 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
     "subjectId": 3,
     "startAt": "2026-02-15T14:00:00.000Z",
     "durationMin": 60,
-    "status": "CONFIRMED",
+    "statusForTeacher": "CONFIRMED",
+    "statusForStudent": "PENDING",
     "teacher": {
       "id": 2,
       "name": "John",
@@ -1676,6 +1679,23 @@ Sends a message in a conversation via HTTP endpoint. For real-time messaging, us
 - A conversation is automatically created when a contact request is ACCEPTED
 - Each conversation is linked to a unique contact request via `requestId`
 - Only participants (student and teacher) can access the conversation
+
+### Lesson
+
+```typescript
+{
+  id: number,;
+  subjectId: number;
+  teacherUserId: number;
+  studentUserId: number;
+  startAt: Date;
+  durationMin: number;
+  statusForTeacher: "PENDING" | "CONFIRMED" | "CANCELLED";
+  statausForStudent: "PENDING" | "CONFIRMED" | "CANCELLED";
+  student?: User;
+  teacher?: User;
+}
+```
 
 ### Message
 

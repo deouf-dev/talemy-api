@@ -82,12 +82,20 @@ export async function getMyContactRequests({ userId, role, filterStatus }) {
       ...whereClause,
       ...(filterStatus ? { status: filterStatus } : {}),
     },
+    include: [
+      {
+        model: User,
+        as: "student",
+        attributes: ["id", "name", "surname", "email"],
+      },
+    ],
     order: [["createdAt", "DESC"]],
   });
   return contactRequests.map((request) => ({
     id: request.id,
     studentUserId: request.studentUserId,
     teacherUserId: request.teacherUserId,
+    student: request.student,
     status: request.status,
     message: request.message,
   }));
@@ -113,13 +121,14 @@ export async function updateContactRequestStatus(requestId, userId, newStatus) {
     "FORBIDDEN",
     "You are not authorized to update this contact request",
   );
+  console.log(contactRequest.toJSON());
   contactRequest.status = newStatus;
   await contactRequest.save();
   if (newStatus === "ACCEPTED") {
     await Conversations.create({
       studentUserId: contactRequest.studentUserId,
       teacherUserId: contactRequest.teacherUserId,
-      contactRequestId: contactRequest.id,
+      requestId: contactRequest.id,
     });
   }
   return {

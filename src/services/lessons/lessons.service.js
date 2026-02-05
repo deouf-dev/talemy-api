@@ -7,7 +7,7 @@ const { Lessons, User, Subjects } = db;
 /**
  * Create a new lesson
  * @param {{teacherUserId: number, studentUserId: number, subjectId: number, startAt: Date|string, durationMin: number}} payload
- * @returns {Promise<{id: number, teacherUserId: number, studentUserId: number, subjectId: number, startAt: Date, durationMin: number, status: string, createdAt: Date, updatedAt: Date}>}
+ * @returns {Promise<{id: number, teacherUserId: number, studentUserId: number, subjectId: number, startAt: Date, durationMin: number, statusForStudent: string, statusForTeacher: string, createdAt: Date, updatedAt: Date}>}
  */
 export async function createLesson(payload) {
   const { teacherUserId, studentUserId, subjectId, startAt, durationMin } =
@@ -55,7 +55,8 @@ export async function createLesson(payload) {
     subjectId,
     startAt: startDate,
     durationMin,
-    status: "PENDING",
+    statusForStudent: "PENDING",
+    statusForTeacher: "PENDING",
   });
 
   return lesson;
@@ -78,7 +79,8 @@ export async function getUserLessons({ userId, role, status, page, pageSize }) {
   }
 
   if (status && ["PENDING", "CONFIRMED", "CANCELLED"].includes(status)) {
-    whereClause.status = status;
+    const key = role === "TEACHER" ? "statusForTeacher" : "statusForStudent";
+    whereClause[key] = status;
   }
 
   const pageNum = clampInt(page, 1, 1, 10_000);
@@ -178,8 +180,9 @@ export async function updateLessonStatus({ lessonId, userId, status }) {
     "FORBIDDEN",
     "You do not have permission to update this lesson",
   );
-
-  await lesson.update({ status });
+  const key =
+    lesson.teacherUserId === userId ? "statusForTeacher" : "statusForStudent";
+  await lesson.update({ [key]: status });
 
   const updatedLesson = await Lessons.findByPk(lessonId, {
     include: [
@@ -232,13 +235,14 @@ export async function deleteLesson(lessonId, userId) {
 export async function getUpcomingLessons({ userId, role }) {
   const whereClause = {
     startAt: { [Op.gte]: new Date() },
-    status: { [Op.in]: ["PENDING", "CONFIRMED"] },
   };
 
   if (role === "TEACHER") {
     whereClause.teacherUserId = userId;
+    whereClause.statusForTeacher = { [Op.in]: ["PENDING", "CONFIRMED"] };
   } else if (role === "STUDENT") {
     whereClause.studentUserId = userId;
+    whereClause.statusForStudent = { [Op.in]: ["PENDING", "CONFIRMED"] };
   } else {
     throw new Error("Invalid role");
   }

@@ -60,7 +60,7 @@ export async function getConversations(userId, limit = 50, offset = 0) {
   return {
     conversations: conversations.map((conv) => {
       const partner =
-        conv.studentUserId === userId ? conv.teacher : conv.student;
+        conv.studentUserId == userId ? conv.teacher : conv.student;
       return {
         id: conv.id,
         partner: {
@@ -99,15 +99,15 @@ export async function sendMessage(conversationId, senderUserId, content) {
   });
   assertOrThrow(conversation, 404, "NOT_FOUND", "Conversation not found");
   assertOrThrow(
-    senderUserId === conversation.studentUserId ||
-      senderUserId === conversation.teacherUserId,
+    senderUserId == conversation.studentUserId ||
+      senderUserId == conversation.teacherUserId,
     403,
     "FORBIDDEN",
     "User is not a participant of the conversation",
   );
   assertOrThrow(
     conversation.contactRequest &&
-      conversation.contactRequest.status === "ACCEPTED",
+      conversation.contactRequest.status == "ACCEPTED",
     409,
     "CONFLICT",
     "Conversation is not active",
@@ -154,16 +154,17 @@ export async function getMessages(conversationId, userId, page, pageSize) {
     ],
   });
   assertOrThrow(conversation, 404, "NOT_FOUND", "Conversation not found");
+  console.log(conversation.toJSON(), userId);
   assertOrThrow(
-    userId === conversation.studentUserId ||
-      userId === conversation.teacherUserId,
+    userId == conversation.studentUserId ||
+      userId == conversation.teacherUserId,
     403,
     "FORBIDDEN",
     "User is not a participant of the conversation",
   );
   assertOrThrow(
     conversation.contactRequest &&
-      conversation.contactRequest.status === "ACCEPTED",
+      conversation.contactRequest.status == "ACCEPTED",
     409,
     "CONFLICT",
     "Conversation is not active",

@@ -59,10 +59,10 @@ router.put(
   },
 );
 
-router.get("/:userId", requireAuth, async (req, res, next) => {
+router.get("/:userId", async (req, res, next) => {
   try {
     const profile = await getTeacherProfile(req.params.userId);
-    res.status(200).json({ profile });
+    res.status(200).json({ ...profile });
   } catch (error) {
     return next(error);
   }

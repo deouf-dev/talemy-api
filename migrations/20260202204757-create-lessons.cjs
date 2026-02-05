@@ -48,7 +48,12 @@ module.exports = {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-      status: {
+      status_for_student: {
+        type: Sequelize.ENUM("PENDING", "CONFIRMED", "CANCELLED"),
+        allowNull: false,
+        defaultValue: "PENDING",
+      },
+      status_for_teacher: {
         type: Sequelize.ENUM("PENDING", "CONFIRMED", "CANCELLED"),
         allowNull: false,
         defaultValue: "PENDING",

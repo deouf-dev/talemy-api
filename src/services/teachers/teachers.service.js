@@ -268,7 +268,7 @@ export async function searchTeachers(query) {
     offset,
     order: [["updatedAt", "DESC"]],
   });
-
+  console.log(rows);
   return {
     items: rows.map((teacherProfile) => ({
       id: teacherProfile.user.id,

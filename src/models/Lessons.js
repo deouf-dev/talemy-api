@@ -46,7 +46,12 @@ export default (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
       },
-      status: {
+      statusForStudent: {
+        type: DataTypes.ENUM("PENDING", "CONFIRMED", "CANCELLED"),
+        allowNull: false,
+        defaultValue: "PENDING",
+      },
+      statusForTeacher: {
         type: DataTypes.ENUM("PENDING", "CONFIRMED", "CANCELLED"),
         allowNull: false,
         defaultValue: "PENDING",
