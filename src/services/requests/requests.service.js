@@ -44,7 +44,6 @@ export async function createContactRequest(payload) {
     where: {
       studentUserId,
       teacherUserId,
-      status: "PENDING",
     },
   });
   assertOrThrow(
@@ -112,6 +111,11 @@ export async function getMyContactRequests({ userId, role, filterStatus }) {
         as: "student",
         attributes: ["id", "name", "surname", "email"],
       },
+      {
+        model: User,
+        as: "teacher",
+        attributes: ["id", "name", "surname", "email"],
+      },
     ],
     order: [["createdAt", "DESC"]],
   });
@@ -120,6 +124,7 @@ export async function getMyContactRequests({ userId, role, filterStatus }) {
     studentUserId: request.studentUserId,
     teacherUserId: request.teacherUserId,
     student: request.student,
+    teacher: request.teacher,
     status: request.status,
     message: request.message,
   }));
@@ -165,6 +170,11 @@ export async function updateContactRequestStatus(requestId, userId, newStatus) {
         as: "student",
         attributes: ["id", "name", "surname", "email"],
       },
+      {
+        model: User,
+        as: "teacher",
+        attributes: ["id", "name", "surname", "email"],
+      },
     ],
   });
 
@@ -192,4 +202,33 @@ export async function updateContactRequestStatus(requestId, userId, newStatus) {
     status: contactRequest.status,
     message: contactRequest.message,
   };
+}
+
+export async function cancelContactRequest(requestId, userId) {
+  const contactRequest = await ContactRequests.findByPk(requestId);
+  assertOrThrow(contactRequest, 404, "NOT_FOUND", "Contact request not found");
+  assertOrThrow(
+    userId == contactRequest.studentUserId,
+    403,
+    "FORBIDDEN",
+    "You are not authorized to cancel this contact request",
+  );
+  await contactRequest.destroy();
+
+  if (io) {
+    io.to(`user:${contactRequest.teacherUserId}`).emit(
+      "contactRequest:cancelled",
+      {
+        contactRequestId: contactRequest.id,
+      },
+    );
+    io.to(`user:${contactRequest.studentUserId}`).emit(
+      "contactRequest:cancelled",
+      {
+        contactRequestId: contactRequest.id,
+      },
+    );
+  }
+
+  return { message: "Contact request cancelled successfully" };
 }

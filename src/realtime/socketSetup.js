@@ -19,8 +19,8 @@ export function socketSetup(io) {
           });
         const userId = socket.user.id;
         if (
-          userId !== conversation.studentUserId &&
-          userId !== conversation.teacherUserId
+          userId != conversation.studentUserId &&
+          userId != conversation.teacherUserId
         ) {
           return socket.emit("socket:error", {
             code: 403,
@@ -79,8 +79,8 @@ export function socketSetup(io) {
           });
         const userId = socket.user.id;
         if (
-          userId !== conversation.studentUserId &&
-          userId !== conversation.teacherUserId
+          userId != conversation.studentUserId &&
+          userId != conversation.teacherUserId
         ) {
           return socket.emit("socket:error", {
             code: 403,

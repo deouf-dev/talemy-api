@@ -3,6 +3,7 @@ import {
   createContactRequest,
   getMyContactRequests,
   updateContactRequestStatus,
+  cancelContactRequest,
 } from "../services/requests/requests.service.js";
 import { requireAuth } from "../middlewares/auth.js";
 import { requireRole } from "../middlewares/requireRole.js";
@@ -77,5 +78,17 @@ router.patch(
     }
   },
 );
+
+router.delete("/:requestId", requireAuth, async (req, res, next) => {
+  try {
+    const result = await cancelContactRequest(
+      req.params.requestId,
+      req.user.id,
+    );
+    res.status(204).send(result);
+  } catch (error) {
+    return next(error);
+  }
+});
 
 export default router;

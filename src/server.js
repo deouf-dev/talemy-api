@@ -10,7 +10,7 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:8000",
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST"],
   },
