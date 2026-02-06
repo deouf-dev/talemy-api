@@ -28,6 +28,7 @@ db.sequelize
       console.log(`Server is running on port ${PORT}`);
     });
   })
-  .catch(() => {
+  .catch((error) => {
+    console.error("Unable to connect to the database:", error);
     process.exit(1);
   });
