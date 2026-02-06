@@ -21,7 +21,7 @@
   },
   "production": {
     "username": "root",
-    "password": null,
+    "password": "",
     "database": "talemy_prod",
     "host": "127.0.0.1",
     "dialect": "mysql",
