@@ -15,6 +15,7 @@ const app = express();
 app.use(
   cors({
     origin: "*",
+    credentials: true,
   }),
 );
 app.use(express.json());
@@ -29,5 +30,9 @@ app.use("/lessons", lessonRoutes);
 app.use("/reviews", reviewRoutes);
 app.use("/availability", availabilityRoutes);
 app.use(errorHandler);
+
+app.use("/ping", (req, res) => {
+  res.status(200).json({ message: "pong" });
+});
 
 export default app;
