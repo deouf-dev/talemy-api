@@ -70,7 +70,7 @@ export async function createAvailabilitySlot(payload) {
     compareTime(startTime, endTime) < 0,
     400,
     "VALIDATION_ERROR",
-    "Start time must be before end time",
+    "Start time must be beffore end time",
   );
 
   const overlappingSlot = await AvailabilitySlots.findOne({
@@ -176,7 +176,7 @@ export async function getAvailabilitySlotById(slotId, userId) {
   assertOrThrow(slot, 404, "NOT_FOUND", "Availability slot not found");
 
   assertOrThrow(
-    slot.teacherUserId === userId,
+    slot.teacherUserId == userId,
     403,
     "FORBIDDEN",
     "You do not have access to this availability slot",
@@ -201,7 +201,7 @@ export async function updateAvailabilitySlot({
   assertOrThrow(slot, 404, "NOT_FOUND", "Availability slot not found");
 
   assertOrThrow(
-    slot.teacherUserId === teacherUserId,
+    slot.teacherUserId == teacherUserId,
     403,
     "FORBIDDEN",
     "You do not have permission to update this slot",
@@ -302,7 +302,7 @@ export async function deleteAvailabilitySlot(slotId, teacherUserId) {
   assertOrThrow(slot, 404, "NOT_FOUND", "Availability slot not found");
 
   assertOrThrow(
-    slot.teacherUserId === teacherUserId,
+    slot.teacherUserId == teacherUserId,
     403,
     "FORBIDDEN",
     "You do not have permission to delete this slot",
