@@ -24,7 +24,7 @@ router.post(
   requireRole("TEACHER"),
   async (req, res, next) => {
     try {
-      const { dayOfWeek, startAt, endAt } = req.body;
+      const { dayOfWeek, startTime, endTime } = req.body;
 
       assertOrThrow(
         dayOfWeek !== undefined,
@@ -32,14 +32,19 @@ router.post(
         "VALIDATION_ERROR",
         "dayOfWeek is required",
       );
-      assertOrThrow(startAt, 400, "VALIDATION_ERROR", "startAt is required");
-      assertOrThrow(endAt, 400, "VALIDATION_ERROR", "endAt is required");
+      assertOrThrow(
+        startTime,
+        400,
+        "VALIDATION_ERROR",
+        "startTime is required",
+      );
+      assertOrThrow(endTime, 400, "VALIDATION_ERROR", "endTime is required");
 
       const slot = await createAvailabilitySlot({
         teacherUserId: req.user.id,
         dayOfWeek: Number(dayOfWeek),
-        startAt,
-        endAt,
+        startTime,
+        endTime,
       });
 
       res.status(201).json({ slot });
