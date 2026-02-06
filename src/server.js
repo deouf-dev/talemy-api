@@ -15,7 +15,7 @@ const io = new Server(httpServer, {
     methods: ["GET", "POST"],
   },
 });
-
+console.log(process.env.NODE_ENV);
 socketSetup(io);
 
 export { io };

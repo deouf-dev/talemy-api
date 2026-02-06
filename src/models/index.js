@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import fs from "fs";
 import path from "path";
 import Sequelize from "sequelize";
@@ -7,16 +10,18 @@ import process from "process";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const env = process.env.NODE_ENV || "development";
-
 import configFile from "../../config/config.json" with { type: "json" };
+const env = process.env[configFile.use_env_variable] || "development";
 const config = configFile[env];
 
 const db = {};
 
-const sequelize = config.use_env_variable
-  ? new Sequelize(process.env[config.use_env_variable], config)
-  : new Sequelize(config.database, config.username, config.password, config);
+const sequelize = new Sequelize(
+  config.database,
+  config.username,
+  config.password,
+  config,
+);
 
 const modelFiles = fs
   .readdirSync(__dirname)
