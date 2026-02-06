@@ -5,6 +5,31 @@ import { Op } from "sequelize";
 const { AvailabilitySlots, User } = db;
 
 /**
+ * Validate time format (HH:mm or HH:mm:ss)
+ * @param {string} time
+ * @returns {boolean}
+ */
+function isValidTimeFormat(time) {
+  if (typeof time !== "string") return false;
+  const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/;
+  return timeRegex.test(time);
+}
+
+/**
+ * Compare two time strings
+ * @param {string} time1
+ * @param {string} time2
+ * @returns {number} -1 if time1 < time2, 0 if equal, 1 if time1 > time2
+ */
+function compareTime(time1, time2) {
+  const [h1, m1] = time1.split(":").map(Number);
+  const [h2, m2] = time2.split(":").map(Number);
+  const minutes1 = h1 * 60 + m1;
+  const minutes2 = h2 * 60 + m2;
+  return minutes1 - minutes2;
+}
+
+/**
  * Create an availability slot for a teacher
  * @param {{teacherUserId: number, dayOfWeek: number, startTime: Date|string, endTime: Date|string}} payload
  * @returns {Promise<Object>}
@@ -27,11 +52,22 @@ export async function createAvailabilitySlot(payload) {
     "Day of week must be an integer between 0 and 6",
   );
 
-  const startDate = new Date(startTime);
-  const endDate = new Date(endTime);
+  assertOrThrow(
+    isValidTimeFormat(startTime),
+    400,
+    "VALIDATION_ERROR",
+    "Start time must be in HH:mm or HH:mm:ss format",
+  );
 
   assertOrThrow(
-    startDate < endDate,
+    isValidTimeFormat(endTime),
+    400,
+    "VALIDATION_ERROR",
+    "End time must be in HH:mm or HH:mm:ss format",
+  );
+
+  assertOrThrow(
+    compareTime(startTime, endTime) < 0,
     400,
     "VALIDATION_ERROR",
     "Start time must be before end time",
@@ -43,16 +79,16 @@ export async function createAvailabilitySlot(payload) {
       dayOfWeek,
       [Op.or]: [
         {
-          startTime: { [Op.lte]: startDate },
-          endTime: { [Op.gt]: startDate },
+          startTime: { [Op.lte]: startTime },
+          endTime: { [Op.gt]: startTime },
         },
         {
-          startTime: { [Op.lt]: endDate },
-          endTime: { [Op.gte]: endDate },
+          startTime: { [Op.lt]: endTime },
+          endTime: { [Op.gte]: endTime },
         },
         {
-          startTime: { [Op.gte]: startDate },
-          endTime: { [Op.lte]: endDate },
+          startTime: { [Op.gte]: startTime },
+          endTime: { [Op.lte]: endTime },
         },
       ],
     },
@@ -68,8 +104,8 @@ export async function createAvailabilitySlot(payload) {
   const slot = await AvailabilitySlots.create({
     teacherUserId,
     dayOfWeek,
-    startTime: startDate,
-    endTime: endDate,
+    startTime,
+    endTime,
   });
 
   return slot;
@@ -184,18 +220,30 @@ export async function updateAvailabilitySlot({
   }
 
   if (startTime !== undefined) {
-    updates.startTime = new Date(startTime);
+    assertOrThrow(
+      isValidTimeFormat(startTime),
+      400,
+      "VALIDATION_ERROR",
+      "Start time must be in HH:mm or HH:mm:ss format",
+    );
+    updates.startTime = startTime;
   }
 
   if (endTime !== undefined) {
-    updates.endTime = new Date(endTime);
+    assertOrThrow(
+      isValidTimeFormat(endTime),
+      400,
+      "VALIDATION_ERROR",
+      "End time must be in HH:mm or HH:mm:ss format",
+    );
+    updates.endTime = endTime;
   }
 
   const finalStartTime = updates.startTime || slot.startTime;
   const finalEndTime = updates.endTime || slot.endTime;
 
   assertOrThrow(
-    finalStartTime < finalEndTime,
+    compareTime(finalStartTime, finalEndTime) < 0,
     400,
     "VALIDATION_ERROR",
     "Start time must be before end time",
