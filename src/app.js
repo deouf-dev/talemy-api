@@ -31,7 +31,7 @@ app.use("/reviews", reviewRoutes);
 app.use("/availability", availabilityRoutes);
 app.use(errorHandler);
 
-app.use("/ping", (req, res) => {
+app.get("/ping", (req, res) => {
   res.status(200).json({ message: "pong" });
 });
 
