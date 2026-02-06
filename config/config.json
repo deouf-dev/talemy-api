@@ -20,8 +20,8 @@
     "dialect": "mysql"
   },
   "production": {
-    "username": "root",
-    "password": null,
+    "username": "deouf",
+    "password": "13221322",
     "database": "talemy_prod",
     "host": "127.0.0.1",
     "dialect": "mysql",
